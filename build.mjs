@@ -13,7 +13,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { watch } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, 'src');
@@ -23,15 +23,21 @@ const read = (...p) => readFile(join(SRC, ...p), 'utf8');
 /** Escapa apenas o necessário para atributos HTML. */
 const attr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 
-async function build() {
+export async function build({ quiet = false } = {}) {
   const manifest = JSON.parse(await read('manifest.json'));
   const { meta, sections } = manifest;
 
-  const [css, js, masthead] = await Promise.all([
+  const [css, printCss, js, masthead, coverRaw] = await Promise.all([
     read('styles.css'),
+    read('print.css'),
     read('app.js'),
     read('masthead.html'),
+    read('cover.html'),
   ]);
+
+  // A capa só aparece no papel, mas mora no mesmo HTML: assim o Ctrl+P do
+  // artifact publicado gera exatamente o mesmo PDF que o export automatizado.
+  const cover = coverRaw.replace(/\{\{(\w+)\}\}/g, (_, k) => meta[k] ?? '');
 
   // Numeração das seções (§0, §1, …) e dos nós da árvore (1, 2, …) é derivada
   // da ordem no manifest. Reordenar lá renumera tudo, incluindo o índice.
@@ -70,14 +76,21 @@ async function build() {
     )
     .join('\n\n');
 
-  const footer = meta.footer.map((f) => `        <span>${f}</span>`).join('\n');
+  const footer = [`v${meta.version}`, ...meta.footer]
+    .map((f) => `        <span>${f}</span>`)
+    .join('\n');
 
   // <title> vem primeiro de propósito: o publicador só varre os primeiros 8KB.
   const out = `<title>${meta.title}</title>
 <style>
-${css}</style>
+${css}
+${printCss}</style>
 
 <div class="wrap">
+
+  <section class="cover">
+${cover.trim().split('\n').map((l) => '    ' + l).join('\n')}
+  </section>
 
   <header class="masthead">
 ${masthead.trim().split('\n').map((l) => '    ' + l).join('\n')}
@@ -117,18 +130,24 @@ ${js}</script>
   await mkdir(dirname(outPath), { recursive: true });
   await writeFile(outPath, out, 'utf8');
 
-  const kb = (Buffer.byteLength(out, 'utf8') / 1024).toFixed(1);
-  console.log(`✓ ${outPath}  (${kb} KB · ${built.length} seções · ${sections.find((s) => s.tree)?.tree.nodes.length ?? 0} nós na árvore)`);
-  return outPath;
+  if (!quiet) {
+    const kb = (Buffer.byteLength(out, 'utf8') / 1024).toFixed(1);
+    const nodes = sections.find((s) => s.tree)?.tree.nodes.length ?? 0;
+    console.log(`✓ ${outPath}  (v${meta.version} · ${kb} KB · ${built.length} seções · ${nodes} nós na árvore)`);
+  }
+  return { outPath, meta };
 }
 
-await build();
+// Só roda sozinho quando invocado direto; export-pdf.mjs importa build().
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await build();
 
-if (process.argv.includes('--watch')) {
-  console.log('… observando src/ (ctrl-c para sair)');
-  let pending = null;
-  watch(SRC, { recursive: true }, () => {
-    clearTimeout(pending);
-    pending = setTimeout(() => build().catch((e) => console.error('✗', e.message)), 80);
-  });
+  if (process.argv.includes('--watch')) {
+    console.log('… observando src/ (ctrl-c para sair)');
+    let pending = null;
+    watch(SRC, { recursive: true }, () => {
+      clearTimeout(pending);
+      pending = setTimeout(() => build().catch((e) => console.error('✗', e.message)), 80);
+    });
+  }
 }

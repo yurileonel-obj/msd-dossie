@@ -3,8 +3,15 @@
     "title": "Dossiê MSD Saúde Animal",
     "favicon": "🐾🔎",
     "description": "Árvore de conhecimento público sobre a MSD Saúde Animal e análise de mercado da vertical de identificação de pets, com aprofundamento no HomeAgain.",
+
+    "version": "1.0.0",
+    "date": "2026-08-17",
+    "dateLabel": "agosto de 2026",
+
     "artifactUrl": "https://claude.ai/code/artifact/085424fe-a691-4df7-b7b9-2aa4625cd9ea",
+    "repoUrl": "https://github.com/yurileonel-obj/msd-dossie",
     "output": "dist/msd-dossie.html",
+    "pdfOutput": "dist/msd-dossie-v{{version}}.pdf",
     "footer": [
       "Dossiê MSD Saúde Animal",
       "Fontes públicas, fechadas em agosto de 2026",

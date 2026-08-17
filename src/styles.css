@@ -94,6 +94,9 @@
 
 * { box-sizing: border-box; }
 
+/* Capa: existe só no papel. Ver print.css. */
+.cover { display: none; }
+
 body {
   background: var(--bg);
   color: var(--ink);

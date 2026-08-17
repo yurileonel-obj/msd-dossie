@@ -1,0 +1,229 @@
+/* =========================================================================
+   Camada de impressão — vale para o PDF exportado e para o Ctrl+P do artifact.
+   Carregada depois de styles.css, então sobrescreve por ordem de cascata.
+
+   Três coisas que esta folha precisa garantir, nesta ordem de importância:
+     1. tema claro forçado (o bloco prefers-color-scheme não tem media type,
+        então valeria também no papel e imprimiria fundo preto);
+     2. conteúdo de <details> fechado visível (senão o PDF sai com ramos vazios);
+     3. URLs das fontes impressas por extenso (o PDF circula offline).
+   ========================================================================= */
+
+@media print {
+
+  /* 1. tema claro, sempre — sobrescreve os três estados de tema */
+  :root,
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    --bg: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-2: #F2F5F4;
+    --ink: #101A17;
+    --ink-2: #3B4B46;
+    --ink-3: #667571;
+    --line: #C9D4D0;
+    --line-strong: #A9B8B3;
+    --primary: #0B443C;
+    --primary-ink: #0B443C;
+    --primary-soft: #E4EFEB;
+    --accent: #8A5609;
+    --accent-soft: #F8EEDA;
+    --warn: #7A3117;
+    --warn-soft: #F9E5DC;
+    --shadow: none;
+
+    --seq-1: #093F38;
+    --seq-2: #0E5A50;
+    --seq-3: #1D7C6F;
+    --seq-4: #46A093;
+    --seq-5: #86C4B8;
+    --seq-6: #BEDCD5;
+  }
+
+  @page { size: A4; margin: 17mm 15mm; }
+
+  html, body { background: #FFFFFF; }
+  body {
+    font-size: 10.4pt;
+    line-height: 1.46;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .wrap { max-width: none; padding: 0; }
+  :root { --measure: none; }
+
+  /* fora do papel */
+  .masthead, .tree-tools, #tip, .toc summary, button.tool { display: none !important; }
+
+  /* 2. ramos fechados precisam imprimir abertos */
+  details.node > summary .chev { display: none; }
+  details.node > summary { border-bottom: 1px solid var(--line); }
+  details.node > .node-body,
+  details:not([open]) > *:not(summary) { display: block !important; }
+
+  /* ---------- capa ---------- */
+
+  .cover {
+    display: flex !important;
+    flex-direction: column;
+    min-height: 252mm;
+    break-after: page;
+    padding-top: 8mm;
+  }
+  .cover .kicker {
+    font-family: var(--font-mono);
+    font-size: 8.5pt;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .cover h1 {
+    font-family: var(--font-display);
+    font-size: 40pt;
+    line-height: 1.02;
+    letter-spacing: -.03em;
+    font-weight: 640;
+    margin: 44px 0 0;
+    max-width: 14ch;
+  }
+  .cover .sub {
+    font-size: 12.5pt;
+    color: var(--ink-2);
+    margin: 22px 0 0;
+    max-width: 52ch;
+    line-height: 1.5;
+  }
+  .cover .meta {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .cover .meta div { background: #FFFFFF; padding: 12px 14px; }
+  .cover .meta dt {
+    font-family: var(--font-mono);
+    font-size: 7.5pt;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 4px;
+  }
+  .cover .meta dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 10.5pt;
+    font-weight: 620;
+    color: var(--ink);
+  }
+  .cover .meta dd.small { font-family: var(--font-mono); font-size: 8pt; font-weight: 400; word-break: break-all; color: var(--ink-2); }
+  .cover .warnbox {
+    margin-top: 16px;
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    background: var(--accent-soft);
+    font-size: 9.5pt;
+    color: var(--ink-2);
+  }
+
+  /* ---------- sumário ---------- */
+
+  .toc {
+    position: static !important;
+    display: block !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: none !important;
+    break-after: page;
+  }
+  .toc-title {
+    display: block !important;
+    font-size: 9pt;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+  }
+  .toc details[open] ol { margin: 0 !important; padding: 0 !important; border: none !important; }
+  .toc ol { gap: 0; }
+  .toc a {
+    font-size: 11.5pt;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+  }
+  .toc a .n { font-size: 9pt; min-width: 30px; }
+
+  /* ---------- fluxo das seções ---------- */
+
+  section { break-before: page; padding-top: 0; }
+  section:first-of-type { break-before: auto; }
+  .sec-head { margin-bottom: 18px; }
+  h2 { font-size: 19pt; }
+  h3 { font-size: 12.5pt; margin: 22px 0 8px; break-after: avoid; }
+  h4 { margin: 20px 0 8px; break-after: avoid; }
+  .lede { font-size: 11.4pt; }
+
+  /* blocos que não podem partir ao meio */
+  .kpi, .card, .callout, .persona, figure.chart, .qlist li, ul.leaves > li, tr {
+    break-inside: avoid;
+  }
+  details.node { break-inside: auto; box-shadow: none; margin-bottom: 14px; }
+  details.node > summary { break-after: avoid; font-size: 12pt; }
+
+  /* ---------- grades ---------- */
+
+  .kpis { grid-template-columns: repeat(3, 1fr); }
+  .kpi .v { font-size: 17pt; }
+  .kpi .v small { font-size: 10pt; }
+  .kpi .k { font-size: 9pt; }
+  .kpi .src { font-size: 7.5pt; }
+
+  .cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { box-shadow: none; padding: 13px; }
+  .card .ct { font-size: 11pt; }
+  .card p { font-size: 9.6pt; }
+  .card .ev { font-size: 7.8pt; }
+
+  .persona { grid-template-columns: 150px minmax(0,1fr); }
+  .persona ul { font-size: 10pt; }
+
+  /* ---------- tabelas ---------- */
+
+  .tscroll { overflow: visible !important; break-inside: auto; }
+  table { min-width: 0; font-size: 8.8pt; }
+  th, td { padding: 7px 9px; }
+  thead th { position: static; font-size: 7.5pt; }
+  thead { display: table-header-group; }
+  /* styles.css fixa 14.5px aqui; em pt isso destoa do resto da tabela. */
+  td.name { white-space: normal; font-size: inherit; }
+
+  /* ---------- gráfico ---------- */
+
+  figure.chart { box-shadow: none; padding: 14px; }
+  .stackbar { height: 34px; }
+
+  /* ---------- fontes: URL por extenso ---------- */
+
+  .sources { columns: 1; font-size: 9.5pt; }
+  .sources p { margin-bottom: 9px; }
+  .sources a { text-decoration: none; color: var(--ink); font-weight: 600; }
+  .sources a::after {
+    content: " — " attr(href);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 7.6pt;
+    font-weight: 400;
+    color: var(--ink-3);
+    word-break: break-all;
+  }
+
+  ul.leaves { gap: 11px; }
+  ul.sub { font-size: 9.8pt; }
+
+  footer.end { break-before: avoid; margin-top: 34px; font-size: 8pt; }
+}
