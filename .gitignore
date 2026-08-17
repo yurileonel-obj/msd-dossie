@@ -1,0 +1,2 @@
+# saída do build — regenerável com `node build.mjs`
+dist/

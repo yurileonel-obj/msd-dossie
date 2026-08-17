@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "title": "Dossiê MSD Saúde Animal",
+    "favicon": "🐾🔎",
+    "description": "Árvore de conhecimento público sobre a MSD Saúde Animal e análise de mercado da vertical de identificação de pets, com aprofundamento no HomeAgain.",
+    "artifactUrl": "https://claude.ai/code/artifact/085424fe-a691-4df7-b7b9-2aa4625cd9ea",
+    "output": "dist/msd-dossie.html",
+    "footer": [
+      "Dossiê MSD Saúde Animal",
+      "Fontes públicas, fechadas em agosto de 2026",
+      "Objective · alocação MSD/Merck"
+    ]
+  },
+
+  "sections": [
+    {
+      "id": "numeros",
+      "title": "Os números que ancoram tudo",
+      "file": "numeros.html"
+    },
+    {
+      "id": "arvore",
+      "title": "Árvore de conhecimento",
+      "file": "arvore.html",
+      "tree": {
+        "dir": "arvore",
+        "nodes": [
+          { "title": "A corporação-mãe: Merck &amp; Co. / MSD", "file": "01-corporacao.html", "open": true },
+          { "title": "A unidade: MSD Animal Health", "file": "02-unidade.html", "open": true },
+          { "title": "Animal Health Intelligence — a casa do HomeAgain", "file": "03-ahi.html", "open": true },
+          { "title": "HomeAgain: anatomia do produto", "file": "04-homeagain.html", "open": true },
+          { "title": "O problema estrutural do setor: registros fragmentados", "file": "05-fragmentacao.html", "open": true },
+          { "title": "Brasil — MSD Saúde Animal", "file": "06-brasil.html" },
+          { "title": "Regulatório: o que restringe o produto", "file": "07-regulatorio.html" },
+          { "title": "Tecnologia, dados e canais — onde a Objective se encaixa", "file": "08-tecnologia.html" },
+          { "title": "Glossário operacional", "file": "09-glossario.html" }
+        ]
+      }
+    },
+    { "id": "mercado",       "title": "Panorama competitivo",           "file": "mercado.html" },
+    { "id": "forcas",        "title": "Forças da MSD",                  "file": "forcas.html" },
+    { "id": "gaps",          "title": "Gaps e vulnerabilidades",        "file": "gaps.html" },
+    { "id": "usuarios",      "title": "Necessidades por persona",       "file": "usuarios.html" },
+    { "id": "tendencias",    "title": "Tendências até 2029",            "file": "tendencias.html" },
+    { "id": "oportunidades", "title": "Onde o HomeAgain pode ganhar",   "file": "oportunidades.html" },
+    { "id": "perguntas",     "title": "Perguntas para o cliente",       "file": "perguntas.html" },
+    { "id": "fontes",        "title": "Fontes e armadilhas",            "file": "fontes.html" }
+  ]
+}
