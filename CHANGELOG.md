@@ -15,6 +15,23 @@ Cada versão publicada vira uma tag `vX.Y.Z` e um release no GitHub com o PDF an
 
 ---
 
+## [1.0.1] — 2026-08-17
+
+### Corrigido
+
+- **Ramos 6 a 9 da árvore saíam vazios no PDF** — apareciam só o número e o título,
+  sem o conteúdo. São exatamente os ramos que o `manifest.json` marca como recolhidos
+  (`open: false`): Brasil, Regulatório, Tecnologia e Glossário.
+
+  Causa: desde o Chrome 128 o conteúdo de um `<details>` fechado vive no
+  pseudo-elemento `::details-content` com `content-visibility: hidden`, que a regra
+  `display: block` nos filhos não sobrescreve. A correção abre os ramos por
+  JavaScript antes de imprimir, disparada por `?print=1` na exportação e por
+  `beforeprint` no Ctrl+P; o CSS ficou como reforço para navegadores que suportam o
+  pseudo-elemento.
+
+> **O PDF da v1.0.0 está incompleto.** Use este.
+
 ## [1.0.0] — 2026-08-17
 
 Primeira versão completa. Dados públicos fechados em agosto de 2026.

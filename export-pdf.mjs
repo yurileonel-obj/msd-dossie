@@ -88,8 +88,13 @@ async function main() {
     '--virtual-time-budget=4000',
   ];
 
+  // ?print=1 faz o app.js abrir todos os ramos da árvore antes da impressão.
+  // Sem isso os ramos fechados saem no PDF como título sem conteúdo — o
+  // --print-to-pdf headless não dispara beforeprint de forma confiável.
+  const PRINT_QUERY = '?print=1';
+
   if (!windows) {
-    execFileSync(bin, [...flags, `--print-to-pdf=${pdfPath}`, `file://${htmlPath}`], { stdio: ['ignore', 'ignore', 'pipe'] });
+    execFileSync(bin, [...flags, `--print-to-pdf=${pdfPath}`, `file://${htmlPath}${PRINT_QUERY}`], { stdio: ['ignore', 'ignore', 'pipe'] });
   } else {
     // O Chrome do Windows não enxerga /home do WSL de forma confiável:
     // copia entrada e saída por um diretório que os dois lados leem.
@@ -100,7 +105,7 @@ async function main() {
       await copyFile(htmlPath, stagedHtml);
 
       const winDir = toWin(stage);
-      const winHtmlUrl = 'file:///' + toWin(stagedHtml).replace(/\\/g, '/');
+      const winHtmlUrl = 'file:///' + toWin(stagedHtml).replace(/\\/g, '/') + PRINT_QUERY;
 
       execFileSync(bin, [...flags, `--print-to-pdf=${winDir}\\${basename(pdfPath)}`, winHtmlUrl], {
         stdio: ['ignore', 'ignore', 'pipe'],

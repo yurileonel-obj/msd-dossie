@@ -55,9 +55,14 @@
   /* fora do papel */
   .masthead, .tree-tools, #tip, .toc summary, button.tool { display: none !important; }
 
-  /* 2. ramos fechados precisam imprimir abertos */
+  /* 2. ramos fechados precisam imprimir abertos.
+        Desde o Chrome 128 o conteúdo de um <details> fechado fica em
+        ::details-content com content-visibility: hidden — `display: block` nos
+        filhos não vence isso. A regra abaixo cobre quem suporta o pseudo; a
+        garantia de verdade está no app.js, que abre os ramos antes de imprimir. */
   details.node > summary .chev { display: none; }
   details.node > summary { border-bottom: 1px solid var(--line); }
+  details::details-content { content-visibility: visible !important; block-size: auto !important; }
   details.node > .node-body,
   details:not([open]) > *:not(summary) { display: block !important; }
 
