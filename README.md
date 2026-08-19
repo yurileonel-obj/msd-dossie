@@ -37,6 +37,11 @@ msd/
 ├── build.mjs                    gerador do HTML (sem deps)
 ├── export-pdf.mjs               orquestra o Chrome headless para imprimir o PDF
 ├── CHANGELOG.md                 o que mudou em cada versão do conhecimento
+├── CLAUDE.md                    harness: arquitetura, convenções e como refazer o dossiê
+├── AGENTS.md                    gerado do CLAUDE.md, sob o nome que outros agentes leem
+├── .claude/commands/
+│   └── novo-dossie.md           conduz um dossiê novo de ponta a ponta
+├── .github/prompts/             gerado — o mesmo comando para o Copilot Chat
 ├── dist/                        saída — não edite, é regenerada
 │   ├── msd-dossie.html
 │   └── msd-dossie-v1.0.0.pdf
@@ -155,6 +160,32 @@ Para atualizar mantendo **o mesmo link**, peça ao Claude para republicar
 `dist/msd-dossie.html` passando essa URL. Publicar sem a URL cria um artifact novo e
 separado — o link antigo continua com a versão velha. A URL também está gravada em
 `manifest.json` (`meta.artifactUrl`).
+
+## Reaproveitar para outro escopo
+
+O chassi deste repositório — build, estilo, camada de impressão e a estrutura editorial das
+dez seções — não tem nada de específico da MSD. Clonar e trocar o conteúdo é o uso previsto:
+outro produto, outra unidade, outro cliente, ou o mesmo cliente lido pela lente de outro
+papel (design, produto, dados, liderança).
+
+No Claude Code ou no Copilot Chat, com o repositório aberto:
+
+```
+/novo-dossie <escopo> · <papel>
+```
+
+Ele enquadra o escopo, limpa o conteúdo herdado, pesquisa seção por seção mantendo a
+disciplina de fontes, verifica o PDF e fecha a versão. O mapa de quais camadas se
+reaproveitam e quais se trocam está no [CLAUDE.md](CLAUDE.md).
+
+O harness tem um canônico e cópias geradas pelo build, uma para cada ferramenta:
+`CLAUDE.md` → `AGENTS.md` (Copilot, Codex, Cursor) e `.claude/commands/novo-dossie.md` →
+`.github/prompts/novo-dossie.prompt.md` (Copilot Chat). **Edite sempre o canônico** e rode
+`node build.mjs`; o que você escrever nos gerados o próximo build desfaz.
+
+Um detalhe que custa caro esquecer: **apague `meta.artifactUrl`** do `manifest.json` ao
+começar um dossiê novo. Herdar essa URL faz você republicar por cima do artifact de outra
+pessoa.
 
 ## Convenções de conteúdo
 

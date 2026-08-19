@@ -1,0 +1,5 @@
+# Arquivos gerados pelo build a partir de um canônico (ver MIRRORS em build.mjs).
+# Marcar como gerado colapsa o diff no GitHub e tira o arquivo das estatísticas —
+# a revisão acontece no canônico.
+AGENTS.md                            linguist-generated=true
+.github/prompts/*.prompt.md          linguist-generated=true

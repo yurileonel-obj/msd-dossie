@@ -6,11 +6,13 @@
  * precisam ser embutidos. É por isso que existe um build: os arquivos ficam
  * separados para edição, e o publicável é um só.
  *
- *   node build.mjs            → dist/msd-dossie.html
+ * De carona, regenera os arquivos que outras ferramentas leem — ver MIRRORS.
+ *
+ *   node build.mjs            → dist/msd-dossie.html (+ AGENTS.md, .github/prompts/)
  *   node build.mjs --watch    → reconstrói a cada alteração em src/
  */
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, lstat, rm } from 'node:fs/promises';
 import { watch } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -22,6 +24,88 @@ const read = (...p) => readFile(join(SRC, ...p), 'utf8');
 
 /** Escapa apenas o necessário para atributos HTML. */
 const attr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+
+/**
+ * Arquivos gerados a partir de um canônico do repo, para que cada ferramenta ache o
+ * harness sob o nome que ela procura. `via` transforma; sem ele é cópia byte a byte.
+ */
+const MIRRORS = [
+  // Instruções. O Claude Code lê CLAUDE.md; Copilot, Codex e Cursor leem AGENTS.md.
+  { from: 'CLAUDE.md', to: 'AGENTS.md' },
+  // Comando. Assim /novo-dossie se digita igual no Claude Code e no Copilot Chat.
+  { from: '.claude/commands/novo-dossie.md', to: '.github/prompts/novo-dossie.prompt.md', via: toCopilotPrompt },
+];
+
+/**
+ * Converte um comando do Claude Code em prompt file do Copilot.
+ *
+ * Aqui não dá cópia byte a byte como no AGENTS.md: o frontmatter é outro (`mode`,
+ * `description`) e o argumento tem outra sintaxe (`$ARGUMENTS` → `${input:…}`). O
+ * `argument-hint`, que o Copilot não tem, é rebaixado a texto no corpo — some do
+ * autocomplete, mas o leitor continua sabendo o formato esperado.
+ */
+function toCopilotPrompt(source, from) {
+  const m = /^---\n([\s\S]*?)\n---\n/.exec(source);
+  const front = m ? m[1] : '';
+  const body = m ? source.slice(m[0].length) : source;
+
+  const field = (k) => (new RegExp(`^${k}:\\s*(.+)$`, 'm').exec(front)?.[1] ?? '').trim();
+  const quoted = (v) => `'${v.replace(/'/g, "''")}'`;
+
+  const description = field('description');
+  const hint = field('argument-hint');
+
+  // filter por `!== null`, não por Boolean: '' aqui é linha em branco intencional.
+  return [
+    '---',
+    'mode: agent',
+    description ? `description: ${quoted(description)}` : null,
+    '---',
+    '',
+    `<!-- Arquivo gerado a partir de ${from} — edite o canônico e rode \`node build.mjs\`. -->`,
+    '',
+    hint ? `> **Argumento esperado:** ${hint}` : null,
+    '',
+    body.replace(/\$ARGUMENTS/g, '${input:escopo}').trimStart(),
+  ]
+    .filter((line) => line !== null)
+    .join('\n');
+}
+
+/**
+ * Reescreve todos os MIRRORS a partir dos canônicos. Os canônicos mandam: alteração
+ * feita no arquivo gerado é desfeita no build seguinte.
+ *
+ * Symlink em vez de cópia seria mais elegante e foi a primeira tentativa, mas
+ * `git clone` no Windows sem core.symlinks materializa o link como um arquivo de
+ * texto com o caminho dentro — o agente lê "CLAUDE.md" e mais nada, sem erro
+ * visível. Cópia funciona em qualquer ambiente; o preço é poder divergir, e é isso
+ * que esta função elimina.
+ */
+export async function mirrorAgentDocs({ quiet = false } = {}) {
+  const written = [];
+
+  for (const { from, to, via } of MIRRORS) {
+    const source = await readFile(join(ROOT, from), 'utf8').catch(() => null);
+    if (source === null) continue;
+
+    const wanted = via ? via(source, from) : source;
+    const target = join(ROOT, to);
+
+    // Um alvo que ainda seja symlink precisa morrer antes do write, senão o write
+    // atravessa o link e sobrescreve o próprio canônico.
+    const link = await lstat(target).catch(() => null);
+    if (link?.isSymbolicLink()) await rm(target);
+    else if ((await readFile(target, 'utf8').catch(() => null)) === wanted) continue;
+
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, wanted, 'utf8');
+    written.push(to);
+  }
+
+  if (written.length && !quiet) console.log(`✓ espelhado: ${written.join(', ')}`);
+  return { written };
+}
 
 export async function build({ quiet = false } = {}) {
   const manifest = JSON.parse(await read('manifest.json'));
@@ -129,6 +213,10 @@ ${js}</script>
   const outPath = resolve(ROOT, meta.output ?? 'dist/msd-dossie.html');
   await mkdir(dirname(outPath), { recursive: true });
   await writeFile(outPath, out, 'utf8');
+
+  // Dentro do build de propósito: é o único ponto por onde todo mundo passa,
+  // incluindo o export-pdf.mjs e o --watch.
+  await mirrorAgentDocs({ quiet });
 
   if (!quiet) {
     const kb = (Buffer.byteLength(out, 'utf8') / 1024).toFixed(1);
